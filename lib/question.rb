@@ -2,7 +2,8 @@ require 'mongo_db'
 
 class Question
   include MongoDB
+  extend MongoDB
 
-  # field :autor, String
-  # field :contenido, String
+  field :author, String
+  field :content, String
 end

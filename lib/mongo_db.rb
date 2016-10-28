@@ -1,6 +1,7 @@
 
 module MongoDB
   @@client = nil
+  @@fields = []
 
   def self.client
     if @@client == nil
@@ -10,6 +11,26 @@ module MongoDB
       )
     end
     @@client
+  end
+
+  def field(name, type)
+    @@fields << name
+
+    define_method(name) do
+      instance_variable_get("@#{name}")
+    end
+
+    define_method("#{name}=") do |value|
+      if value.is_a? type
+        instance_variable_set("@#{name}", value)
+      else
+        raise ArgumentError.new('Invalid Type')
+      end
+    end
+  end
+
+  def fields
+    @@fields
   end
 
 end

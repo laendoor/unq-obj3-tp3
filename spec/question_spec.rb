@@ -7,16 +7,16 @@ describe Question do
     expect(true).to be true
   end
 
-  # it 'has automatics accessors' do
-  #   p = Question.new
-  #   p.autor     = 'Eduardo'
-  #   p.contenido = 'Cual es el radio de la tierra'
-  #
-  #   expect(p.autor).to eq 'Eduardo'
-  #   expect(p.contenido).to eq 'Cual es el radio de la tierra'
-  # end
+  it 'has automatics accessors' do
+    q = Question.new
+    q.author  = 'Eduardo'
+    q.content = 'Cual es el radio de la tierra'
 
-  # it 'does something useful' do
-  #   expect(false).to eq(true)
-  # end
+    expect(q.author).to eq 'Eduardo'
+    expect(q.content).to eq 'Cual es el radio de la tierra'
+  end
+
+  it 'reflects fields' do
+    expect(Question.fields).to eq ([:author, :content])
+  end
 end
