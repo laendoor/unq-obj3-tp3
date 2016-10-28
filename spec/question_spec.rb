@@ -18,5 +18,16 @@ describe Question do
 
   it 'reflects fields' do
     expect(Question.fields).to eq ([:author, :content])
+    end
+
+  it 'reflects collection name' do
+    expect(Question.collection_name).to eq 'questions'
+    end
+
+  it 'reflects custom collection name' do
+    class Question
+      collection :questionsss
+    end
+    expect(Question.collection_name).to eq 'questionsss'
   end
 end

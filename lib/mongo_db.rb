@@ -1,10 +1,11 @@
 
 module MongoDB
   @@client = nil
+  @@collection_name = nil
   @@fields = []
 
   def self.client
-    if @@client == nil
+    if @@client.nil?
       @@client = Mongo::Client.new(
         ['127.0.0.1:27017'],
         :database => 'preguntas'
@@ -31,6 +32,14 @@ module MongoDB
 
   def fields
     @@fields
+  end
+
+  def collection(name)
+    @@collection_name = name.to_s.downcase
+  end
+
+  def collection_name
+    @@collection_name.nil? ? self.to_s.downcase << 's' : @@collection_name
   end
 
 end
