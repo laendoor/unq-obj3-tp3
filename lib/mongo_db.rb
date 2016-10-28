@@ -1,45 +1,57 @@
 
 module MongoDB
-  @@client = nil
-  @@collection_name = nil
-  @@fields = []
 
-  def self.client
-    if @@client.nil?
-      @@client = Mongo::Client.new(
-        ['127.0.0.1:27017'],
-        :database => 'preguntas'
-      )
-    end
-    @@client
+  def self.included(base)
+    base.include(InstanceMethods)
+    base.extend(ClassMethods)
   end
 
-  def field(name, type)
-    @@fields << name
+  module ClassMethods
+    @@client = nil
 
-    define_method(name) do
-      instance_variable_get("@#{name}")
+    def client
+      if @@client.nil?
+        @@client = Mongo::Client.new(
+          ['127.0.0.1:27017'],
+          :database => 'preguntas'
+        )
+      end
+      @@client
     end
 
-    define_method("#{name}=") do |value|
-      if value.is_a? type
-        instance_variable_set("@#{name}", value)
-      else
-        raise ArgumentError.new('Invalid Type')
+    def field(name, type)
+      @fields = [] if @fields.nil?
+      @fields << name
+
+      define_method(name) do
+        instance_variable_get("@#{name}")
+      end
+
+      define_method("#{name}=") do |value|
+        if value.is_a? type
+          instance_variable_set("@#{name}", value)
+        else
+          raise ArgumentError.new('Invalid Type')
+        end
       end
     end
+
+    def fields
+      @fields
+    end
+
+    def collection(name)
+      @collection_name = name.to_s.downcase
+    end
+
+    def collection_name
+      @collection_name.nil? ? self.to_s.downcase << 's' : @collection_name
+    end
+
   end
 
-  def fields
-    @@fields
-  end
+  module InstanceMethods
 
-  def collection(name)
-    @@collection_name = name.to_s.downcase
-  end
-
-  def collection_name
-    @@collection_name.nil? ? self.to_s.downcase << 's' : @@collection_name
   end
 
 end
