@@ -30,4 +30,12 @@ describe Question do
     end
     expect(Question.collection_name).to eq 'questionsss'
   end
+
+  it 'can return hash of fields' do
+    q = Question.new
+    q.author  = 'Eduardo'
+    q.content = 'ABC?'
+
+    expect(q.asHash).to eq ({:author => 'Eduardo', :content => 'ABC?'})
+  end
 end

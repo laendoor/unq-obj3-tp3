@@ -21,15 +21,15 @@ module MongoDB
 
     def field(name, type)
       @fields = [] if @fields.nil?
-      @fields << name
+      @fields << Field.new(name, type)
 
       define_method(name) do
-        instance_variable_get("@#{name}")
+        instance_variable_get(name.get_symbol)
       end
 
-      define_method("#{name}=") do |value|
+      define_method(name.set_symbol) do |value|
         if value.is_a? type
-          instance_variable_set("@#{name}", value)
+          instance_variable_set(name.get_symbol, value)
         else
           raise ArgumentError.new('Invalid Type')
         end
@@ -37,6 +37,10 @@ module MongoDB
     end
 
     def fields
+      @fields.map { |f| f.name }
+    end
+
+    def ifields
       @fields
     end
 
@@ -51,7 +55,30 @@ module MongoDB
   end
 
   module InstanceMethods
-
+    def asHash
+      hash = {}
+      self.class.ifields.each { |f| hash[f.name] = instance_variable_get f.name.get_symbol }
+      hash
+    end
   end
 
+  class Field
+    attr_accessor :name, :type
+
+    def initialize(name, type)
+      self.name = name
+      self.type = type
+    end
+  end
+
+end
+
+class Symbol
+  def get_symbol
+    "@#{self}".to_sym
+  end
+
+  def set_symbol
+    "#{self}="
+  end
 end
