@@ -1,7 +1,7 @@
-require 'mongo_db'
+require 'mongo_record'
 
 class Question
-  include MongoDB
+  include MongoRecord
 
   field :author, String
   field :content, String
