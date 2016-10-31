@@ -25,7 +25,7 @@ describe Question do
       expect(Question.collection_name).to eq 'questions'
     end
 
-    it 'can return hash of fields' do
+    it 'can return a hash of fields' do
       q = Question.new
       q.author  = 'Eduardo'
       q.content = 'ABC?'
@@ -66,7 +66,18 @@ describe Question do
   describe 'Persistence' do
 
     before :all do
-      @collection = Question.mongo_collection
+      Question.collection.drop
+    end
+
+    after :each do
+      Question.collection.drop
+    end
+
+    it 'can get mongo collection by class or instance' do
+      q = Question.new
+
+      expect(q.collection).to be_a Mongo::Collection
+      expect(Question.collection).to be_a Mongo::Collection
     end
 
     it 'can save fields as mongo documents' do
@@ -75,10 +86,11 @@ describe Question do
       q.content = 'ABC?'
       q.save
 
-      found = @collection.find({ author: 'Eduardo' }).first
+      found = q.collection.find({ author: 'Eduardo' }).first
 
       expect(found[:author]).to eq 'Eduardo'
       expect(found[:content]).to eq 'ABC?'
     end
+
   end
 end

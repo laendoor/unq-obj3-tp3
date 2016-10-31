@@ -3,8 +3,8 @@ require 'symbol'
 module MongoRecord
 
   def self.included(base)
-    base.include(InstanceMethods)
-    base.extend(ClassMethods)
+    base.include InstanceMethods
+    base.extend ClassMethods
   end
 
   module ClassMethods
@@ -24,15 +24,19 @@ module MongoRecord
     end
 
     def fields
-      @fields.map { |f| f.name }
+      @fields.map { |field| field.name }
     end
 
     def get_fields
       @fields
     end
 
-    def collection(name)
-      @collection_name = name.to_s.downcase
+    def collection(name = nil)
+      if name.nil?
+        MongoDB.client[collection_name]
+      else
+        @collection_name = name.to_s.downcase
+      end
     end
 
     def reset_collection_name
@@ -43,13 +47,13 @@ module MongoRecord
       @collection_name.nil? ? self.to_s.downcase << 's' : @collection_name
     end
 
-    def mongo_collection
-      MongoDB.client[collection_name]
-    end
-
   end
 
   module InstanceMethods
+
+    def collection
+      self.class.collection
+    end
 
     def as_hash
       hash = {}
@@ -58,7 +62,7 @@ module MongoRecord
     end
 
     def save
-      result = self.class.mongo_collection.insert_one self.as_hash
+      result = collection.insert_one self.as_hash
       result.n
     end
   end
