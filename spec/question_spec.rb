@@ -30,7 +30,7 @@ describe Question do
       q.author  = 'Eduardo'
       q.content = 'ABC?'
 
-      expect(q.asHash).to eq ({:author => 'Eduardo', :content => 'ABC?'})
+      expect(q.as_hash).to eq ({:author => 'Eduardo', :content => 'ABC?'})
     end
 
   end
@@ -43,18 +43,29 @@ describe Question do
       end
     end
 
+    after :all do
+      Question.reset_collection_name
+    end
+
     it 'reflects custom collection name' do
       expect(Question.collection_name).to eq 'questionsss'
     end
   end
 
+  describe 'Type checking' do
+
+    it 'raise Argument Error when type mismatch' do
+      q = Question.new
+
+      expect { q.author  = 2 }.to raise_error(ArgumentError, 'Invalid Type')
+      expect { q.content = true }.to raise_error(ArgumentError, 'Invalid Type')
+    end
+
+  end
+
   describe 'Persistence' do
 
     before :all do
-      class Question
-        collection :questions
-      end
-
       @collection = Question.mongo_collection
     end
 
@@ -66,8 +77,8 @@ describe Question do
 
       found = @collection.find({ author: 'Eduardo' }).first
 
-      expect(found[:author]).to eq(q.asHash[:author])
-      expect(found[:content]).to eq(q.asHash[:content])
+      expect(found[:author]).to eq 'Eduardo'
+      expect(found[:content]).to eq 'ABC?'
     end
   end
 end

@@ -1,3 +1,4 @@
+require 'symbol'
 
 module MongoRecord
 
@@ -13,15 +14,12 @@ module MongoRecord
       @fields << Field.new(name, type)
 
       define_method(name) do
-        instance_variable_get(name.get_symbol)
+        instance_variable_get name.symbol_get
       end
 
-      define_method(name.set_symbol) do |value|
-        if value.is_a? type
-          instance_variable_set(name.get_symbol, value)
-        else
-          raise ArgumentError.new('Invalid Type')
-        end
+      define_method(name.symbol_set) do |value|
+        raise ArgumentError.new 'Invalid Type' unless value.is_a? type
+        instance_variable_set(name.symbol_get, value)
       end
     end
 
@@ -29,12 +27,16 @@ module MongoRecord
       @fields.map { |f| f.name }
     end
 
-    def ifields
+    def get_fields
       @fields
     end
 
     def collection(name)
       @collection_name = name.to_s.downcase
+    end
+
+    def reset_collection_name
+      @collection_name = nil
     end
 
     def collection_name
@@ -49,14 +51,14 @@ module MongoRecord
 
   module InstanceMethods
 
-    def asHash
+    def as_hash
       hash = {}
-      self.class.ifields.each { |f| hash[f.name] = instance_variable_get f.name.get_symbol }
+      self.class.get_fields.each { |f| hash[f.name] = instance_variable_get f.name.symbol_get }
       hash
     end
 
     def save
-      result = self.class.mongo_collection.insert_one(self.asHash)
+      result = self.class.mongo_collection.insert_one self.as_hash
       result.n
     end
   end
@@ -72,13 +74,3 @@ module MongoRecord
 
 end
 
-# FIXME evaluar si mover a otro lado
-class Symbol
-  def get_symbol
-    "@#{self}".to_sym
-  end
-
-  def set_symbol
-    "#{self}="
-  end
-end
