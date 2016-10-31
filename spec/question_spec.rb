@@ -92,5 +92,15 @@ describe Question do
       expect(found[:content]).to eq 'ABC?'
     end
 
+    it 'I test the count method returns the number of items in the collection' do
+
+
+      old = Question.count()
+      Question.new().save()
+      expect(Question.count()).to eq (old + 1)
+
+
+    end
+
   end
 end

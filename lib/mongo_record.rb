@@ -11,17 +11,28 @@ module MongoRecord
 
     def field(name, type)
       @fields = [] if @fields.nil?
-      @fields << Field.new(name, type)
+      @fields << Field.new(name, type) #<< es como el metodo add
 
       define_method(name) do
         instance_variable_get name.symbol_get
       end
+
+
 
       define_method(name.symbol_set) do |value|
         raise ArgumentError.new 'Invalid Type' unless value.is_a? type
         instance_variable_set(name.symbol_get, value)
       end
     end
+
+    def count()
+
+      @collection = MongoDB.client[collection_name]
+
+      return collection.count()
+
+    end
+
 
     def fields
       @fields.map { |field| field.name }
