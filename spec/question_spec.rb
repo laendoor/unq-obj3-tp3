@@ -30,7 +30,7 @@ describe Question do
       q.author  = 'Eduardo'
       q.content = 'ABC?'
 
-      expect(q.as_hash).to eq ({:author => 'Eduardo', :content => 'ABC?'})
+      expect(q.as_hash).to eq ({:author => 'Eduardo', :content => 'ABC?',:_id =>nil})
     end
 
   end
@@ -98,6 +98,15 @@ describe Question do
       old = Question.count()
       Question.new().save()
       expect(Question.count()).to eq (old + 1)
+
+
+    end
+
+    it 'prueba de _id' do
+
+      q = Question.new()
+      q.save()
+      expect(q._id).not_to be nil
 
 
     end

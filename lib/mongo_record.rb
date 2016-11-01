@@ -17,8 +17,6 @@ module MongoRecord
         instance_variable_get name.symbol_get
       end
 
-
-
       define_method(name.symbol_set) do |value|
         raise ArgumentError.new 'Invalid Type' unless value.is_a? type
         instance_variable_set(name.symbol_get, value)
@@ -26,11 +24,8 @@ module MongoRecord
     end
 
     def count()
-
       @collection = MongoDB.client[collection_name]
-
       return collection.count()
-
     end
 
 
@@ -62,6 +57,8 @@ module MongoRecord
 
   module InstanceMethods
 
+    attr_accessor :_id
+
     def collection
       self.class.collection
     end
@@ -69,12 +66,20 @@ module MongoRecord
     def as_hash
       hash = {}
       self.class.get_fields.each { |f| hash[f.name] = instance_variable_get f.name.symbol_get }
+      hash[:_id] = _id
       hash
     end
 
     def save
-      result = collection.insert_one self.as_hash
+      self.generateId
+      result = collection.insert_one as_hash
       result.n
+    end
+
+    def generateId
+      if self._id.nil?
+        self._id= BSON::ObjectId.new
+     end
     end
   end
 
@@ -84,6 +89,7 @@ module MongoRecord
     def initialize(name, type)
       self.name = name
       self.type = type
+
     end
   end
 
