@@ -112,21 +112,24 @@ describe Question do
     end
 
     it 'prueba de remove' do
-
-
-
       q = Question.new()
       q.save()
       old = Question.count()
-
-
       q.remove()
 
-
       expect(Question.count()).to eq (old - 1)
-
-
     end
 
+    it 'prueba de findby ???' do
+
+      q = Question.new
+      q.author= "miguel"
+      q.save()
+
+      results = Question.findByauthor("miguel")
+      expect(results).not_to be_empty
+      expect(results.any? {|question| question._id == q._id}).to be true
+
+    end
   end
 end

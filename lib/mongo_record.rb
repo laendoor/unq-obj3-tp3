@@ -21,13 +21,27 @@ module MongoRecord
         raise ArgumentError.new 'Invalid Type' unless value.is_a? type
         instance_variable_set(name.symbol_get, value)
       end
+
+
+      findByName = "findBy" + name.to_s
+      define_singleton_method(findByName) do |value|
+        @collection = MongoDB.client[collection_name]
+        criterio={name=>value}
+        return collection.find (criterio)
+      end
     end
+
 
     def count()
       @collection = MongoDB.client[collection_name]
       return collection.count()
     end
 
+    def find(value)
+
+      @collection = MongoDB.client[collection_name]
+      collection.find( value )
+    end
 
     def fields
       @fields.map { |field| field.name }
