@@ -76,8 +76,12 @@ module MongoRecord
       result.n
     end
 
+    def remove
+      collection.delete_one({"_id" => self._id})
+    end
+
     def generateId
-      if self._id.nil?
+      if _id.nil?
         self._id= BSON::ObjectId.new
      end
     end

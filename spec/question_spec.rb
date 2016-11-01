@@ -111,5 +111,22 @@ describe Question do
 
     end
 
+    it 'prueba de remove' do
+
+
+
+      q = Question.new()
+      q.save()
+      old = Question.count()
+
+
+      q.remove()
+
+
+      expect(Question.count()).to eq (old - 1)
+
+
+    end
+
   end
 end
