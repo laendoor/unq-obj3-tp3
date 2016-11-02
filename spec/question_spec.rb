@@ -127,6 +127,8 @@ describe Question do
       q = Question.new
       q.save
 
+      expect(q.collection.find(:_id => q._id).first).not_to be nil
+
       count = Question.count
       q.remove
 

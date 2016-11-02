@@ -106,7 +106,6 @@ module MongoRecord
     def initialize(name, type)
       self.name = name
       self.type = type
-
     end
   end
 
