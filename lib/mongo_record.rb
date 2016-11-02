@@ -36,10 +36,20 @@ module MongoRecord
       collection.count
     end
 
-    def find(value)
+    def find(hash = {})
+      map_results collection.find(hash)
+    end
 
-      @collection = MongoDB.client[collection_name]
-      collection.find( value )
+    def map_results(results)
+      results.map { |item| map_item item }
+    end
+
+    def map_item(item)
+      i = self.new
+      item.each do |key, value|
+        i.instance_variable_set(key.to_sym.symbol_get, value)
+      end
+      i
     end
 
     def fields

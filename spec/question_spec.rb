@@ -7,6 +7,10 @@ describe Question do
     Mongo::Logger.logger = ::Logger.new('mongo.log')
   end
 
+  after :all do
+    Question.collection.drop
+  end
+
   describe 'Automatic behavior' do
 
     it 'has automatics accessors' do
@@ -142,23 +146,59 @@ describe Question do
       Question.collection.drop
 
       QuestionFactory.insert(author = 'Javier',  content = 'Bla1')
-      QuestionFactory.insert(author = 'Ariel',   content = 'Bla2')
-      QuestionFactory.insert(author = 'Emanuel', content = 'Bla2')
-      QuestionFactory.insert(author = 'Facundo', content = 'Bla2')
-      QuestionFactory.insert(author = 'Leandro', content = 'Bla2')
+      QuestionFactory.insert(author = 'Javier',  content = 'Bla2')
+      QuestionFactory.insert(author = 'Ariel',   content = 'Bla3')
+      QuestionFactory.insert(author = 'Emanuel', content = 'Bla4')
+      QuestionFactory.insert(author = 'Facundo', content = 'Bla5')
+      QuestionFactory.insert(author = 'Leandro', content = 'Bla6')
     end
 
-    # it 'prueba de findby ???' do
-    #
-    #   q = Question.new
-    #   q.author= "miguel"
-    #   q.save()
-    #
-    #   results = Question.findByauthor("miguel")
-    #   expect(results).not_to be_empty
-    #   expect(results.any? {|question| question._id == q._id}).to be true
-    #
-    # end
+    describe 'Basic Find' do
+
+      it 'can find all documents' do
+        results = Question.find
+        result_authors = results.map { |x| x.author }
+
+        expect(results.count).to be 6
+        expect(result_authors).to include 'Javier'
+        expect(result_authors).to include 'Ariel'
+        expect(result_authors).to include 'Emanuel'
+        expect(result_authors).to include 'Facundo'
+        expect(result_authors).to include 'Leandro'
+      end
+
+      it 'can find filtering by _id in hash' do
+        q = QuestionFactory.insert
+        results = Question.find({:_id => q._id})
+
+        expect(results.count).to be 1
+        expect(results.first._id).to eq q._id
+      end
+
+      it 'can find filtering by author in hash' do
+        results = Question.find({:author => 'Javier'})
+        result_authors = results.map { |x| x.author }
+
+        expect(results.count).to be 2
+        expect(result_authors).to include 'Javier'
+        expect(result_authors).not_to include 'Ariel'
+      end
+
+    end
+
+    describe 'Find By' do
+      # it 'prueba de findby ???' do
+      #
+      #   q = Question.new
+      #   q.author= "miguel"
+      #   q.save()
+      #
+      #   results = Question.findByauthor("miguel")
+      #   expect(results).not_to be_empty
+      #   expect(results.any? {|question| question._id == q._id}).to be true
+      #
+      # end
+    end
   end
 
 end
