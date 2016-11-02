@@ -73,49 +73,64 @@ describe Question do
       Question.collection.drop
     end
 
-    it 'can get mongo collection by class or instance' do
-      q = Question.new
-
-      expect(q.collection).to be_a Mongo::Collection
+    it 'can get mongo collection by class' do
       expect(Question.collection).to be_a Mongo::Collection
     end
 
-    it 'can save fields as mongo documents' do
+    it 'can get mongo collection by instance' do
+      expect(Question.new.collection).to be_a Mongo::Collection
+    end
+
+    it 'can insert a new mongo document when save' do
       q = Question.new
       q.author  = 'Eduardo'
       q.content = 'ABC?'
       q.save
 
-      found = q.collection.find({ author: 'Eduardo' }).first
+      found = q.collection.find(:_id => q._id).first
 
       expect(found[:author]).to eq 'Eduardo'
       expect(found[:content]).to eq 'ABC?'
     end
 
-    it 'can count the number of items in the collection' do
+    it 'can update existing mongo document when save' do
+      q = Question.new
+      q.author  = 'Eduardo'
+      q.save
+
+      found = q.collection.find(:_id => q._id).first
+      expect(found[:author]).to eq 'Eduardo'
+
+      q.author = 'Esteban'
+      q.save
+
+      found = q.collection.find(:_id => q._id).first
+      expect(found[:author]).to eq 'Esteban'
+    end
+
+    it 'can count the number of documents in the collection' do
       old = Question.count
       Question.new.save
 
       expect(Question.count).to eq (old + 1)
     end
 
-    it 'prueba de _id' do
+    it 'can set _id field before save' do
+      q = Question.new
+      q.save
 
-      q = Question.new()
-      q.save()
       expect(q._id).not_to be nil
-
-
+      expect(Question.new._id).to be nil
     end
 
-    it 'prueba de remove' do
-      q = Question.new()
-      q.save()
-      old = Question.count()
-      q.remove()
-
-      expect(Question.count()).to eq (old - 1)
-    end
+    # it 'prueba de remove' do
+    #   q = Question.new()
+    #   q.save()
+    #   old = Question.count()
+    #   q.remove()
+    #
+    #   expect(Question.count()).to eq (old - 1)
+    # end
 
     # it 'prueba de findby ???' do
     #

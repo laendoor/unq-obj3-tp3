@@ -84,20 +84,20 @@ module MongoRecord
     end
 
     def save
-      self.generateId
-      result = collection.insert_one as_hash
-      result.n
+      self._id = BSON::ObjectId.new.to_s if self._id.nil?
+
+      if collection.find(:_id => self._id).first.nil? # FIXME
+        collection.insert_one as_hash
+      else
+        collection.update_one({ :_id => self._id }, self.as_hash)
+      end
+
     end
 
     def remove
-      collection.delete_one({"_id" => self._id})
+      collection.delete_one({:_id => self._id})
     end
 
-    def generateId
-      if _id.nil?
-        self._id= BSON::ObjectId.new
-     end
-    end
   end
 
   class Field
