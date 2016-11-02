@@ -92,14 +92,11 @@ describe Question do
       expect(found[:content]).to eq 'ABC?'
     end
 
-    it 'I test the count method returns the number of items in the collection' do
+    it 'can count the number of items in the collection' do
+      old = Question.count
+      Question.new.save
 
-
-      old = Question.count()
-      Question.new().save()
-      expect(Question.count()).to eq (old + 1)
-
-
+      expect(Question.count).to eq (old + 1)
     end
 
     it 'prueba de _id' do
@@ -120,16 +117,16 @@ describe Question do
       expect(Question.count()).to eq (old - 1)
     end
 
-    it 'prueba de findby ???' do
-
-      q = Question.new
-      q.author= "miguel"
-      q.save()
-
-      results = Question.findByauthor("miguel")
-      expect(results).not_to be_empty
-      expect(results.any? {|question| question._id == q._id}).to be true
-
-    end
+    # it 'prueba de findby ???' do
+    #
+    #   q = Question.new
+    #   q.author= "miguel"
+    #   q.save()
+    #
+    #   results = Question.findByauthor("miguel")
+    #   expect(results).not_to be_empty
+    #   expect(results.any? {|question| question._id == q._id}).to be true
+    #
+    # end
   end
 end

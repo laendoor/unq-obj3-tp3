@@ -32,9 +32,8 @@ module MongoRecord
     end
 
 
-    def count()
-      @collection = MongoDB.client[collection_name]
-      return collection.count()
+    def count
+      collection.count
     end
 
     def find(value)
