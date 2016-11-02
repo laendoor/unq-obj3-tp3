@@ -109,10 +109,10 @@ describe Question do
     end
 
     it 'can count the number of documents in the collection' do
-      old = Question.count
+      count = Question.count
       Question.new.save
 
-      expect(Question.count).to eq (old + 1)
+      expect(Question.count).to eq (count + 1)
     end
 
     it 'can set _id field before save' do
@@ -123,14 +123,16 @@ describe Question do
       expect(Question.new._id).to be nil
     end
 
-    # it 'prueba de remove' do
-    #   q = Question.new()
-    #   q.save()
-    #   old = Question.count()
-    #   q.remove()
-    #
-    #   expect(Question.count()).to eq (old - 1)
-    # end
+    it 'can remove a mongo document' do
+      q = Question.new
+      q.save
+
+      count = Question.count
+      q.remove
+
+      expect(Question.count).to eq (count - 1)
+      expect(q.collection.find(:_id => q._id).first).to be nil
+    end
 
     # it 'prueba de findby ???' do
     #
