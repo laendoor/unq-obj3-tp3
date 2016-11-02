@@ -1,4 +1,5 @@
 require 'spec_helper'
+require 'factory/question_factory'
 
 describe Question do
 
@@ -26,11 +27,13 @@ describe Question do
     end
 
     it 'can return a hash of fields' do
-      q = Question.new
-      q.author  = 'Eduardo'
-      q.content = 'ABC?'
+      q = QuestionFactory.create(author = 'Eduardo', content = 'ABC?')
 
-      expect(q.as_hash).to eq ({:author => 'Eduardo', :content => 'ABC?',:_id =>nil})
+      expect(q.as_hash).to eq ({
+        :_id => nil,
+        :author => 'Eduardo',
+        :content => 'ABC?'
+      })
     end
 
   end
@@ -82,20 +85,18 @@ describe Question do
     end
 
     it 'can insert a new mongo document when save' do
-      q = Question.new
-      q.author  = 'Eduardo'
-      q.content = 'ABC?'
+      q = QuestionFactory.create(author = 'Eduardo', content = 'ABC?')
       q.save
 
       found = q.collection.find(:_id => q._id).first
 
+      expect(found[:_id]).to eq q._id
       expect(found[:author]).to eq 'Eduardo'
       expect(found[:content]).to eq 'ABC?'
     end
 
     it 'can update existing mongo document when save' do
-      q = Question.new
-      q.author  = 'Eduardo'
+      q = QuestionFactory.create(author = 'Eduardo')
       q.save
 
       found = q.collection.find(:_id => q._id).first
@@ -110,30 +111,41 @@ describe Question do
 
     it 'can count the number of documents in the collection' do
       count = Question.count
-      Question.new.save
+      QuestionFactory.insert
 
       expect(Question.count).to eq (count + 1)
     end
 
     it 'can set _id field before save' do
-      q = Question.new
-      q.save
+      q = QuestionFactory.create
+      expect(q._id).to be nil
 
+      q.save
       expect(q._id).not_to be nil
-      expect(Question.new._id).to be nil
     end
 
     it 'can remove a mongo document' do
-      q = Question.new
-      q.save
-
+      q = QuestionFactory.insert
+      count = Question.count
       expect(q.collection.find(:_id => q._id).first).not_to be nil
 
-      count = Question.count
       q.remove
-
       expect(Question.count).to eq (count - 1)
       expect(q.collection.find(:_id => q._id).first).to be nil
+    end
+
+  end
+
+  describe 'Finders' do
+
+    before :all do
+      Question.collection.drop
+
+      QuestionFactory.insert(author = 'Javier',  content = 'Bla1')
+      QuestionFactory.insert(author = 'Ariel',   content = 'Bla2')
+      QuestionFactory.insert(author = 'Emanuel', content = 'Bla2')
+      QuestionFactory.insert(author = 'Facundo', content = 'Bla2')
+      QuestionFactory.insert(author = 'Leandro', content = 'Bla2')
     end
 
     # it 'prueba de findby ???' do
@@ -148,4 +160,5 @@ describe Question do
     #
     # end
   end
+
 end
