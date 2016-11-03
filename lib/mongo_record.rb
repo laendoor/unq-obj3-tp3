@@ -172,7 +172,7 @@ module MongoRecord
       self.class.get_fields.select {|f| f.required }.each do |field|
         get_field = instance_variable_get(field.name.symbol_get)
         if get_field.nil? || get_field.empty?
-          raise MongoMapperError.new field.name.to_s.capitalize + ' is required'
+          raise MongoRequiredFieldError.new field.name.to_s
         end
       end
     end
@@ -180,7 +180,10 @@ module MongoRecord
     def type_checking
       self.class.get_fields.each do |field|
         unless instance_variable_get(field.name.symbol_get).is_a? field.type
-          raise MongoMapperError.new field.name.to_s.capitalize + ' should be ' + field.type.to_s
+          name   = field.name.to_s
+          expect = field.type.to_s
+          given  = instance_variable_get(field.name.symbol_get).class.to_s
+          raise MongoTypeCheckingError.new name, expect, given
         end
       end
     end

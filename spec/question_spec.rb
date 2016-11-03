@@ -227,7 +227,7 @@ describe Question do
         q.topic   = 'Meta'
         q.content = 'Saraza'
 
-        expect { q.save }.to raise_error(MongoMapperError, 'Author should be String')
+        expect { q.save }.to raise_error(MongoTypeCheckingError, 'The field <author> requires a <String> type, but got a <Fixnum> instead.')
       end
 
       it 'can check if content is String before save' do
@@ -236,7 +236,7 @@ describe Question do
         q.content = true
         q.author = 'Facundo'
 
-        expect { q.save }.to raise_error(MongoMapperError, 'Content should be String')
+        expect { q.save }.to raise_error(MongoTypeCheckingError)
       end
 
       it 'can check if topic is String before save' do
@@ -245,7 +245,7 @@ describe Question do
         q.content = 'Saraza'
         q.topic = []
 
-        expect { q.save }.to raise_error(MongoMapperError, 'Topic should be String')
+        expect { q.save }.to raise_error(MongoTypeCheckingError)
       end
     end
 
@@ -281,13 +281,14 @@ describe Question do
       q = Question.new
       q.author = ''
 
-      expect { q.save }.to raise_error(MongoMapperError, 'Author is required')
+      expect { q.save }.to raise_error(MongoRequiredFieldError, 'The field <author> is required.')
     end
 
     it 'Content is required' do
       q = Question.new
+      q.author = 'Facundo'
 
-      expect { q.save }.to raise_error(MongoMapperError, 'Author is required')
+      expect { q.save }.to raise_error(MongoRequiredFieldError, 'The field <content> is required.')
       end
 
     it 'Topic is not required' do
@@ -295,7 +296,8 @@ describe Question do
       q.author = 'asd'
       q.content = 'asd'
       q.topic = ''
-      q.save
+
+      expect { q.save }.not_to raise_error
     end
 
   end
