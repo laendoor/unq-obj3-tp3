@@ -261,6 +261,15 @@ describe Question do
 
     end
 
+    describe 'On Populate' do
+
+      it 'can populate on find' do
+        results = Question.find
+        expect(results.all? { |q| q.populate_called.equal? true }).to eq true
+      end
+
+    end
+
   end
 
 end

@@ -116,7 +116,12 @@ module MongoRecord
       item.each do |key, value|
         i.instance_variable_set(key.to_sym.symbol_get, value)
       end
+      i.instance_eval(&@on_populate)
       i
+    end
+
+    def on_populate(&block)
+      @on_populate = block
     end
 
   end

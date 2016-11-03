@@ -7,11 +7,24 @@ class Question
   field :author, String
   field :content, String
 
+  def initialize
+    @populate_called = false
+  end
+
+  on_populate {
+    @populate_called = true
+  }
+
   def before_save
     type_checking
   end
 
   def after_save
     clean_dirty
+  end
+
+  # esto es solo para testear
+  def populate_called
+    @populate_called
   end
 end
