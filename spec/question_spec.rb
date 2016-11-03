@@ -57,17 +57,6 @@ describe Question do
     end
   end
 
-  # describe 'Type checking' do
-  #
-  #   it 'raise Argument Error when type mismatch' do
-  #     q = Question.new
-  #
-  #     expect { q.author  = 2 }.to raise_error(ArgumentError, 'Invalid Type')
-  #     expect { q.content = true }.to raise_error(ArgumentError, 'Invalid Type')
-  #   end
-  #
-  # end
-
   describe 'Persistence' do
 
     before :all do
@@ -231,9 +220,45 @@ describe Question do
 
   describe 'Hooks' do
 
-    it 'can check if author is not set before save' do
-      q = Question.new
-      expect { q.save }.to raise_error(MongoMapperError, 'Author should be String')
+    describe 'Before' do
+      it 'can check if author is not set before save' do
+        q = Question.new
+        q.topic   = 'Meta'
+        q.content = 'Saraza'
+
+        expect { q.save }.to raise_error(MongoMapperError, 'Author should be String')
+      end
+
+      it 'can check if content is not set before save' do
+        q = Question.new
+        q.topic  = 'Meta'
+        q.author = 'Facundo'
+
+        expect { q.save }.to raise_error(MongoMapperError, 'Content should be String')
+      end
+
+      it 'can check if topic is not set before save' do
+        q = Question.new
+        q.author = 'Facundo'
+        q.content = 'Saraza'
+
+        expect { q.save }.to raise_error(MongoMapperError, 'Topic should be String')
+      end
+    end
+
+    describe 'After' do
+
+      it 'clean dirty after save' do
+        q = QuestionFactory.create(author = 'Facundo', content = 'Bla')
+        expect(q.dirty).to eq true
+
+        q.save
+        expect(q.dirty).to eq false
+
+        q.author = 'Leandro'
+        expect(q.dirty).to eq true
+      end
+
     end
 
   end

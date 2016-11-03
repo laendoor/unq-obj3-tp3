@@ -8,8 +8,10 @@ class Question
   field :content, String
 
   def before_save
-    unless author.is_a? String 
-      raise MongoMapperError.new 'Author should be String'
-    end
+    type_checking
+  end
+
+  def after_save
+    clean_dirty
   end
 end

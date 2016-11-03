@@ -29,15 +29,14 @@ module MongoRecord
 
     def field(name, type)
       @fields = [] if @fields.nil?
-      @fields << Field.new(name, type) #<< es como el método add
+      @fields << Field.new(name, type)
 
       define_method(name) do
         instance_variable_get name.symbol_get
       end
 
       define_method(name.symbol_set) do |value|
-        # FIXME esta comprobacion tiene que estar en los hooks
-        # raise ArgumentError.new 'Invalid Type' unless value.is_a? type
+        instance_variable_set(:@dirty, true)
         instance_variable_set(name.symbol_get, value)
       end
     end
@@ -161,6 +160,22 @@ module MongoRecord
 
     def remove
       collection.delete_one({:_id => self._id})
+    end
+
+    def type_checking
+      self.class.get_fields.each do |field|
+        unless instance_variable_get(field.name.symbol_get).is_a? field.type
+          raise MongoMapperError.new field.name.to_s.capitalize + ' should be ' + field.type.to_s
+        end
+      end
+    end
+
+    def clean_dirty
+      instance_variable_set(:@dirty, false)
+    end
+
+    def dirty
+      instance_variable_get(:@dirty)
     end
 
   end
