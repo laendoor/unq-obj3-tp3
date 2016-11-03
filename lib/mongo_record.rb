@@ -97,6 +97,10 @@ module MongoRecord
       extract_find('find_one_by_', method)
     end
 
+    def is_mongo
+      true
+    end
+
     def find_by(method, *args)
       hash   = {}
       values = args.first
@@ -104,7 +108,7 @@ module MongoRecord
       fields.each do |field|
         field_type = get_field_by_name(field).type
         value = values.shift
-        if field_type.new.respond_to? :as_hash_alone
+        if field_type.respond_to? :is_mongo
           value = field_type.new(value).send(:as_hash_alone)
         end
         hash[field.to_sym] = value
@@ -130,7 +134,7 @@ module MongoRecord
       i = self.new
       item.each do |key, value|
         field = get_field_by_name(key)
-        if !field.nil? && field.type.respond_to?(:map_item_alone)
+        if !field.nil? && field.type.respond_to?(:is_mongo)
           new_value = field.type.send(:map_item_alone, value)
         else
           new_value = value
@@ -168,7 +172,7 @@ module MongoRecord
       hash = {}
       self.class.get_fields.each do |f|
         get_var = instance_variable_get f.name.symbol_get
-        if get_var.respond_to?(:as_hash_alone)
+        if get_var.class.respond_to? :is_mongo
           get_var = get_var.send(:as_hash_alone)
         end
         hash[f.name] = get_var
