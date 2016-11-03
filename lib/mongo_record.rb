@@ -1,4 +1,6 @@
-require 'symbol'
+require 'class/symbol'
+require 'class/object'
+require 'errors/mongo_mapper_error'
 
 module MongoRecord
 
