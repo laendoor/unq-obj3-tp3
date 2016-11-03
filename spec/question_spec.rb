@@ -11,51 +11,53 @@ describe Question do
     Question.collection.drop
   end
 
-  describe 'Automatic behavior' do
+  describe 'Behavior' do
+    describe 'Automatic behavior' do
 
-    it 'has automatics accessors' do
-      q = Question.new
-      q.author  = 'Eduardo'
-      q.content = '¿Cuál es el radio de la tierra?'
+      it 'has automatics accessors' do
+        q = Question.new
+        q.author  = 'Eduardo'
+        q.content = '¿Cuál es el radio de la tierra?'
 
-      expect(q.author).to eq 'Eduardo'
-      expect(q.content).to eq '¿Cuál es el radio de la tierra?'
-    end
-
-    it 'reflects fields' do
-      expect(Question.fields).to eq ([:author, :content])
-    end
-
-    it 'reflects collection name' do
-      expect(Question.collection_name).to eq 'questions'
-    end
-
-    it 'can return a hash of fields' do
-      q = QuestionFactory.create(author = 'Eduardo', content = 'ABC?')
-
-      expect(q.as_hash).to eq ({
-        :_id => nil,
-        :author => 'Eduardo',
-        :content => 'ABC?'
-      })
-    end
-
-  end
-
-  describe 'Custom behavior' do
-
-    before :all do
-      class Question
-        collection :questionsss
+        expect(q.author).to eq 'Eduardo'
+        expect(q.content).to eq '¿Cuál es el radio de la tierra?'
       end
+
+      it 'reflects fields' do
+        expect(Question.fields).to eq ([:author, :content])
+      end
+
+      it 'reflects collection name' do
+        expect(Question.collection_name).to eq 'questions'
+      end
+
+      it 'can return a hash of fields' do
+        q = QuestionFactory.create(author = 'Eduardo', content = 'ABC?')
+
+        expect(q.as_hash).to eq ({
+          :_id => nil,
+          :author => 'Eduardo',
+          :content => 'ABC?'
+        })
+      end
+
     end
 
-    after :all do
-      Question.reset_collection_name
-    end
+    describe 'Custom behavior' do
 
-    it 'reflects custom collection name' do
-      expect(Question.collection_name).to eq 'questionsss'
+      before :all do
+        class Question
+          collection :questionsss
+        end
+      end
+
+      after :all do
+        Question.reset_collection_name
+      end
+
+      it 'reflects custom collection name' do
+        expect(Question.collection_name).to eq 'questionsss'
+      end
     end
   end
 
@@ -186,19 +188,17 @@ describe Question do
 
     end
 
-    describe 'Find By' do
-      # it 'prueba de findby ???' do
-      #
-      #   q = Question.new
-      #   q.author= "miguel"
-      #   q.save()
-      #
-      #   results = Question.findByauthor("miguel")
-      #   expect(results).not_to be_empty
-      #   expect(results.any? {|question| question._id == q._id}).to be true
-      #
-      # end
+    describe 'Dynamic Find' do
+
+      it 'can find by author' do
+        results = Question.find_by_author('Ariel')
+
+        expect(results.count).to eq 1
+        expect(results.first.author).to eq 'Ariel'
+      end
+
     end
+
   end
 
 end
