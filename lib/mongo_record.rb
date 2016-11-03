@@ -10,17 +10,15 @@ module MongoRecord
   module ClassMethods
 
     def method_missing(method, *arguments, &block)
-      if simple_find?(method)
-        simple_find(extract_find(method), arguments.first)
-      elsif composed_find?(method)
-        composed_find(extract_find(method), arguments)
+      if is_find_by?(method)
+        find_by(extract_find(method), arguments)
       else
         super
       end
     end
 
     def respond_to?(method, include_private = false)
-      if is_find?(method)
+      if is_find_by?(method)
         true
       else
         super
@@ -73,7 +71,7 @@ module MongoRecord
       map_results collection.find(hash)
     end
 
-    def is_find?(method)
+    def is_find_by?(method)
       method.to_s.start_with? 'find_by_'
     end
 
@@ -83,19 +81,7 @@ module MongoRecord
       method[ini..fin]
     end
 
-    def simple_find?(method)
-      is_find?(method) && instance_methods(false).include?(extract_find(method).to_sym)
-    end
-
-    def simple_find(field, value)
-      find({ field.to_sym => value })
-    end
-
-    def composed_find?(method)
-      is_find?(method) && extract_find(method).include?('_and_')
-    end
-
-    def composed_find(method, *args)
+    def find_by(method, *args)
       hash   = {}
       values = args.first
       fields = method.split '_and_'
