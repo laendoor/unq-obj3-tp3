@@ -27,9 +27,9 @@ module MongoRecord
       end
     end
 
-    def field(name, type)
+    def field(name, type, constraints = {})
       @fields = [] if @fields.nil?
-      @fields << Field.new(name, type)
+      @fields << Field.new(name, type, constraints[:required])
 
       define_method(name) do
         instance_variable_get name.symbol_get
@@ -150,6 +150,7 @@ module MongoRecord
     end
 
     def save
+      required_checking
       before_save
 
       self._id = BSON::ObjectId.new.to_s if self._id.nil?
@@ -165,6 +166,15 @@ module MongoRecord
 
     def remove
       collection.delete_one({:_id => self._id})
+    end
+
+    def required_checking
+      self.class.get_fields.select {|f| f.required }.each do |field|
+        get_field = instance_variable_get(field.name.symbol_get)
+        if get_field.nil? || get_field.empty?
+          raise MongoMapperError.new field.name.to_s.capitalize + ' is required'
+        end
+      end
     end
 
     def type_checking
@@ -186,11 +196,12 @@ module MongoRecord
   end
 
   class Field
-    attr_accessor :name, :type
+    attr_accessor :name, :type, :required
 
-    def initialize(name, type)
+    def initialize(name, type, required)
       self.name = name
       self.type = type
+      self.required = required
     end
   end
 

@@ -4,8 +4,8 @@ class Question
   include MongoRecord
 
   field :topic, String
-  field :author, String
-  field :content, String
+  field :author, String, :required => true
+  field :content, String, :required => true
 
   def initialize
     @populate_called = false

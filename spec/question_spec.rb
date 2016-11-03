@@ -87,7 +87,7 @@ describe Question do
     end
 
     it 'can update existing mongo document when save' do
-      q = QuestionFactory.create(author = 'Eduardo')
+      q = QuestionFactory.create(author = 'Eduardo', 'Bla')
       q.save
 
       found = q.collection.find(:_id => q._id).first
@@ -102,13 +102,13 @@ describe Question do
 
     it 'can count the number of documents in the collection' do
       count = Question.count
-      QuestionFactory.insert
+      QuestionFactory.insert(author = 'a', content = 'b')
 
       expect(Question.count).to eq (count + 1)
     end
 
     it 'can set _id field before save' do
-      q = QuestionFactory.create
+      q = QuestionFactory.create(author = 'a', content = 'b')
       expect(q._id).to be nil
 
       q.save
@@ -116,7 +116,7 @@ describe Question do
     end
 
     it 'can remove a mongo document' do
-      q = QuestionFactory.insert
+      q = QuestionFactory.insert(author = 'a', content = 'b')
       count = Question.count
       expect(q.collection.find(:_id => q._id).first).not_to be nil
 
@@ -156,7 +156,7 @@ describe Question do
       end
 
       it 'can find filtering by _id in hash' do
-        q = QuestionFactory.insert
+        q = QuestionFactory.insert(author = 'a', content = 'b')
         results = Question.find({:_id => q._id})
 
         expect(results.count).to be 1
@@ -221,26 +221,29 @@ describe Question do
   describe 'Hooks' do
 
     describe 'Before' do
-      it 'can check if author is not set before save' do
+      it 'can check if author is String before save' do
         q = Question.new
+        q.author  = 20
         q.topic   = 'Meta'
         q.content = 'Saraza'
 
         expect { q.save }.to raise_error(MongoMapperError, 'Author should be String')
       end
 
-      it 'can check if content is not set before save' do
+      it 'can check if content is String before save' do
         q = Question.new
         q.topic  = 'Meta'
+        q.content = true
         q.author = 'Facundo'
 
         expect { q.save }.to raise_error(MongoMapperError, 'Content should be String')
       end
 
-      it 'can check if topic is not set before save' do
+      it 'can check if topic is String before save' do
         q = Question.new
         q.author = 'Facundo'
         q.content = 'Saraza'
+        q.topic = []
 
         expect { q.save }.to raise_error(MongoMapperError, 'Topic should be String')
       end
@@ -268,6 +271,31 @@ describe Question do
         expect(results.all? { |q| q.populate_called.equal? true }).to eq true
       end
 
+    end
+
+  end
+
+  describe 'Validations' do
+
+    it 'Author is required' do
+      q = Question.new
+      q.author = ''
+
+      expect { q.save }.to raise_error(MongoMapperError, 'Author is required')
+    end
+
+    it 'Content is required' do
+      q = Question.new
+
+      expect { q.save }.to raise_error(MongoMapperError, 'Author is required')
+      end
+
+    it 'Topic is not required' do
+      q = Question.new
+      q.author = 'asd'
+      q.content = 'asd'
+      q.topic = ''
+      q.save
     end
 
   end
