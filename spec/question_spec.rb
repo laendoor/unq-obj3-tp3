@@ -142,12 +142,14 @@ describe Question do
 
     before :all do
       Question.collection.drop
-      QuestionFactory.insert(author = 'Javier',  content = 'Bla1', topic = 'Meta')
-      QuestionFactory.insert(author = 'Javier',  content = 'Bla2', topic = 'Cook')
-      QuestionFactory.insert(author = 'Ariel',   content = 'Bla3', topic = 'Social')
-      QuestionFactory.insert(author = 'Emanuel', content = 'Bla4', topic = 'Meta')
-      QuestionFactory.insert(author = 'Facundo', content = 'Bla4', topic = 'Social')
-      QuestionFactory.insert(author = 'Leandro', content = 'Bla5', topic = 'Meta')
+      @questions = []
+      @questions << QuestionFactory.insert(author = 'Javier',  content = 'Bla1', topic = 'Meta')
+      @questions << QuestionFactory.insert(author = 'Javier',  content = 'Bla2', topic = 'Cook')
+      @questions << QuestionFactory.insert(author = 'Ariel',   content = 'Bla3', topic = 'Social')
+      @questions << QuestionFactory.insert(author = 'Emanuel', content = 'Bla4', topic = 'Meta')
+      @questions << QuestionFactory.insert(author = 'Facundo', content = 'Bla4', topic = 'Social')
+      @questions << QuestionFactory.insert(author = 'Leandro', content = 'Bla5', topic = 'Meta')
+      @questions << QuestionFactory.insert(author = 'Leandro', content = 'Bla6', topic = 'Meta')
     end
 
     describe 'Basic Find' do
@@ -156,7 +158,7 @@ describe Question do
         results = Question.find
         result_authors = results.map { |x| x.author }
 
-        expect(results.count).to be 6
+        expect(results.count).to be @questions.count
         expect(result_authors).to include 'Javier'
         expect(result_authors).to include 'Ariel'
         expect(result_authors).to include 'Emanuel'
@@ -214,6 +216,13 @@ describe Question do
         expect(results.map { |x| x.topic }).to include 'Meta'
         expect(results.map { |x| x.author }).to include 'Javier'
         expect(results.map { |x| x.content }).to include 'Bla1'
+      end
+
+      it 'can find one by author and topic' do
+        result = Question.find_one_by_author_and_topic('Leandro', 'Meta')
+
+        expect(result.topic).to include 'Meta'
+        expect(result.author).to include 'Leandro'
       end
 
     end

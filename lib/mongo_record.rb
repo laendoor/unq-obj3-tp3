@@ -11,7 +11,9 @@ module MongoRecord
 
     def method_missing(method, *arguments, &block)
       if is_find_by?(method)
-        find_by(extract_find(method), arguments)
+        find_by(extract_find_by(method), arguments)
+      elsif is_find_one_by?(method)
+        find_one_by(extract_find_one_by(method), arguments)
       else
         super
       end
@@ -75,10 +77,22 @@ module MongoRecord
       method.to_s.start_with? 'find_by_'
     end
 
-    def extract_find(method)
-      ini = 'find_by_'.size
+    def is_find_one_by?(method)
+      method.to_s.start_with? 'find_one_by_'
+    end
+
+    def extract_find(type, method)
+      ini = type.size
       fin = method.size
       method[ini..fin]
+      end
+
+    def extract_find_by(method)
+      extract_find('find_by_', method)
+    end
+
+    def extract_find_one_by(method)
+      extract_find('find_one_by_', method)
     end
 
     def find_by(method, *args)
@@ -87,6 +101,10 @@ module MongoRecord
       fields = method.split '_and_'
       fields.each { |field| hash[field.to_sym] = values.shift }
       find(hash)
+    end
+
+    def find_one_by(method, *args)
+      find_by(method, *args).first
     end
 
     def map_results(results)
