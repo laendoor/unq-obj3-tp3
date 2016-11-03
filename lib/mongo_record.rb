@@ -9,9 +9,27 @@ module MongoRecord
 
   module ClassMethods
 
+    def method_missing(method, *arguments, &block)
+      if simple_find?(method)
+        simple_find(extract_find(method), arguments.first)
+      elsif composed_find?(method)
+        composed_find(extract_find(method), arguments)
+      else
+        super
+      end
+    end
+
+    def respond_to?(method, include_private = false)
+      if is_find?(method)
+        true
+      else
+        super
+      end
+    end
+
     def field(name, type)
       @fields = [] if @fields.nil?
-      @fields << Field.new(name, type) #<< es como el metodo add
+      @fields << Field.new(name, type) #<< es como el método add
 
       define_method(name) do
         instance_variable_get name.symbol_get
@@ -21,26 +39,6 @@ module MongoRecord
         raise ArgumentError.new 'Invalid Type' unless value.is_a? type
         instance_variable_set(name.symbol_get, value)
       end
-
-
-      findByName = "findBy" + name.to_s
-      define_singleton_method(findByName) do |value|
-        @collection = MongoDB.client[collection_name]
-        criterio={name=>value}
-        return collection.find (criterio)
-      end
-    end
-
-
-    def count()
-      @collection = MongoDB.client[collection_name]
-      return collection.count()
-    end
-
-    def find(value)
-
-      @collection = MongoDB.client[collection_name]
-      collection.find( value )
     end
 
     def fields
@@ -67,6 +65,56 @@ module MongoRecord
       @collection_name.nil? ? self.to_s.downcase << 's' : @collection_name
     end
 
+    def count
+      collection.count
+    end
+
+    def find(hash = {})
+      map_results collection.find(hash)
+    end
+
+    def is_find?(method)
+      method.to_s.start_with? 'find_by_'
+    end
+
+    def extract_find(method)
+      ini = 'find_by_'.size
+      fin = method.size
+      method[ini..fin]
+    end
+
+    def simple_find?(method)
+      is_find?(method) && instance_methods(false).include?(extract_find(method).to_sym)
+    end
+
+    def simple_find(field, value)
+      find({ field.to_sym => value })
+    end
+
+    def composed_find?(method)
+      is_find?(method) && extract_find(method).include?('_and_')
+    end
+
+    def composed_find(method, *args)
+      hash   = {}
+      values = args.first
+      fields = method.split '_and_'
+      fields.each { |field| hash[field.to_sym] = values.shift }
+      find(hash)
+    end
+
+    def map_results(results)
+      results.map { |item| map_item item }
+    end
+
+    def map_item(item)
+      i = self.new
+      item.each do |key, value|
+        i.instance_variable_set(key.to_sym.symbol_get, value)
+      end
+      i
+    end
+
   end
 
   module InstanceMethods
@@ -85,20 +133,20 @@ module MongoRecord
     end
 
     def save
-      self.generateId
-      result = collection.insert_one as_hash
-      result.n
+      self._id = BSON::ObjectId.new.to_s if self._id.nil?
+
+      if collection.find(:_id => self._id).first.nil? # FIXME
+        collection.insert_one as_hash
+      else
+        collection.update_one({ :_id => self._id }, self.as_hash)
+      end
+
     end
 
     def remove
-      collection.delete_one({"_id" => self._id})
+      collection.delete_one({:_id => self._id})
     end
 
-    def generateId
-      if _id.nil?
-        self._id= BSON::ObjectId.new
-     end
-    end
   end
 
   class Field
@@ -107,7 +155,6 @@ module MongoRecord
     def initialize(name, type)
       self.name = name
       self.type = type
-
     end
   end
 
