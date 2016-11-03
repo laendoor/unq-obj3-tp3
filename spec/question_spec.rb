@@ -34,7 +34,7 @@ describe Question do
       it 'can return a hash of fields' do
         q = QuestionFactory.create(author = 'Eduardo', content = 'ABC?')
 
-        expect(q.as_hash).to include(:author => 'Eduardo', :content => 'ABC?')
+        expect(q.as_hash).to include(:author => {:name => 'Eduardo'}, :content => 'ABC?')
       end
 
     end
@@ -82,7 +82,7 @@ describe Question do
       found = q.collection.find(:_id => q._id).first
 
       expect(found[:_id]).to eq q._id
-      expect(found[:author]).to eq 'Eduardo'
+      expect(found[:author]).to eq({'name' => 'Eduardo'})
       expect(found[:content]).to eq 'ABC?'
     end
 
@@ -91,13 +91,13 @@ describe Question do
       q.save
 
       found = q.collection.find(:_id => q._id).first
-      expect(found[:author]).to eq 'Eduardo'
+      expect(found[:author]).to eq({'name' => 'Eduardo'})
 
-      q.author = 'Esteban'
+      q.author = Person.new('Esteban')
       q.save
 
       found = q.collection.find(:_id => q._id).first
-      expect(found[:author]).to eq 'Esteban'
+      expect(found[:author]).to eq({'name' => 'Esteban'})
     end
 
     it 'can count the number of documents in the collection' do
@@ -145,7 +145,7 @@ describe Question do
 
       it 'can find all documents' do
         results = Question.find
-        result_authors = results.map { |x| x.author }
+        result_authors = results.map { |x| x.author.name }
 
         expect(results.count).to be @questions.count
         expect(result_authors).to include 'Javier'
@@ -164,8 +164,8 @@ describe Question do
       end
 
       it 'can find filtering by author in hash' do
-        results = Question.find({:author => 'Javier'})
-        result_authors = results.map { |x| x.author }
+        results = Question.find({:author => {:name => 'Javier'}})
+        result_authors = results.map { |x| x.author.name }
 
         expect(results.count).to be 2
         expect(result_authors).to include 'Javier'
@@ -180,21 +180,21 @@ describe Question do
         results = Question.find_by_author('Ariel')
 
         expect(results.count).to eq 1
-        expect(results.first.author).to eq 'Ariel'
+        expect(results.first.author.name).to eq 'Ariel'
       end
 
       it 'can find by content' do
         results = Question.find_by_content('Bla4')
 
         expect(results.count).to eq 2
-        expect(results.map { |x| x.author }).to include('Emanuel', 'Facundo')
+        expect(results.map { |x| x.author.name }).to include('Emanuel', 'Facundo')
         end
 
       it 'can find by author and content' do
         results = Question.find_by_author_and_content('Javier', 'Bla2')
 
         expect(results.count).to eq 1
-        expect(results.map { |x| x.author }).to include 'Javier'
+        expect(results.map { |x| x.author.name }).to include 'Javier'
         expect(results.map { |x| x.content }).to include 'Bla2'
       end
 
@@ -203,7 +203,7 @@ describe Question do
 
         expect(results.count).to eq 1
         expect(results.map { |x| x.topic }).to include 'Meta'
-        expect(results.map { |x| x.author }).to include 'Javier'
+        expect(results.map { |x| x.author.name }).to include 'Javier'
         expect(results.map { |x| x.content }).to include 'Bla1'
       end
 
@@ -211,7 +211,7 @@ describe Question do
         result = Question.find_one_by_author_and_topic('Leandro', 'Meta')
 
         expect(result.topic).to include 'Meta'
-        expect(result.author).to include 'Leandro'
+        expect(result.author.name).to include 'Leandro'
       end
 
     end
@@ -227,7 +227,7 @@ describe Question do
         q.topic   = 'Meta'
         q.content = 'Saraza'
 
-        expect { q.save }.to raise_error(MongoTypeCheckingError, 'The field <author> requires a <String> type, but got a <Fixnum> instead.')
+        expect { q.save }.to raise_error(MongoTypeCheckingError, 'The field <author> requires a <Person> type, but got a <Fixnum> instead.')
       end
 
       it 'can check if content is String before save' do
@@ -293,7 +293,7 @@ describe Question do
 
     it 'Topic is not required' do
       q = Question.new
-      q.author = 'asd'
+      q.author = Person.new 'asd'
       q.content = 'asd'
       q.topic = ''
 

@@ -101,7 +101,14 @@ module MongoRecord
       hash   = {}
       values = args.first
       fields = method.split '_and_'
-      fields.each { |field| hash[field.to_sym] = values.shift }
+      fields.each do |field|
+        field_type = get_field_by_name(field).type
+        value = values.shift
+        if field_type.new.respond_to? :as_hash_alone
+          value = field_type.new(value).send(:as_hash_alone)
+        end
+        hash[field.to_sym] = value
+      end
       find(hash)
     end
 
@@ -114,12 +121,27 @@ module MongoRecord
     end
 
     def map_item(item)
-      i = self.new
-      item.each do |key, value|
-        i.instance_variable_set(key.to_sym.symbol_get, value)
-      end
+      i = map_item_alone(item)
       i.instance_eval(&@on_populate)
       i
+    end
+
+    def map_item_alone(item)
+      i = self.new
+      item.each do |key, value|
+        field = get_field_by_name(key)
+        if !field.nil? && field.type.respond_to?(:map_item_alone)
+          new_value = field.type.send(:map_item_alone, value)
+        else
+          new_value = value
+        end
+        i.instance_variable_set(key.to_sym.symbol_get, new_value)
+      end
+      i
+    end
+
+    def get_field_by_name(key)
+      @fields.select { |x| x.name.equal? key.to_sym }.first
     end
 
     def on_populate(&block)
@@ -137,9 +159,20 @@ module MongoRecord
     end
 
     def as_hash
-      hash = {}
-      self.class.get_fields.each { |f| hash[f.name] = instance_variable_get f.name.symbol_get }
+      hash = as_hash_alone
       hash[:_id] = _id
+      hash
+    end
+
+    def as_hash_alone
+      hash = {}
+      self.class.get_fields.each do |f|
+        get_var = instance_variable_get f.name.symbol_get
+        if get_var.respond_to?(:as_hash_alone)
+          get_var = get_var.send(:as_hash_alone)
+        end
+        hash[f.name] = get_var
+      end
       hash
     end
 
