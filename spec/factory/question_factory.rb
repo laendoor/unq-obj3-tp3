@@ -1,5 +1,6 @@
 require 'question'
 
+# FIXME haceme diccionario, cabeza
 class QuestionFactory
   def self.create(author = '', content = '', topic = '')
     q = Question.new

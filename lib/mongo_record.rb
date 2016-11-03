@@ -36,7 +36,8 @@ module MongoRecord
       end
 
       define_method(name.symbol_set) do |value|
-        raise ArgumentError.new 'Invalid Type' unless value.is_a? type
+        # FIXME esta comprobacion tiene que estar en los hooks
+        # raise ArgumentError.new 'Invalid Type' unless value.is_a? type
         instance_variable_set(name.symbol_get, value)
       end
     end
@@ -136,15 +137,26 @@ module MongoRecord
       hash
     end
 
+    def before_save
+      # Should Be Implemented by each class
+    end
+
+    def after_save
+      # Should Be Implemented by each class
+    end
+
     def save
+      before_save
+
       self._id = BSON::ObjectId.new.to_s if self._id.nil?
 
-      if collection.find(:_id => self._id).first.nil? # FIXME
+      if collection.find(:_id => self._id).first.nil?
         collection.insert_one as_hash
       else
         collection.update_one({ :_id => self._id }, self.as_hash)
       end
 
+      after_save
     end
 
     def remove

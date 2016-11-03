@@ -57,16 +57,16 @@ describe Question do
     end
   end
 
-  describe 'Type checking' do
-
-    it 'raise Argument Error when type mismatch' do
-      q = Question.new
-
-      expect { q.author  = 2 }.to raise_error(ArgumentError, 'Invalid Type')
-      expect { q.content = true }.to raise_error(ArgumentError, 'Invalid Type')
-    end
-
-  end
+  # describe 'Type checking' do
+  #
+  #   it 'raise Argument Error when type mismatch' do
+  #     q = Question.new
+  #
+  #     expect { q.author  = 2 }.to raise_error(ArgumentError, 'Invalid Type')
+  #     expect { q.content = true }.to raise_error(ArgumentError, 'Invalid Type')
+  #   end
+  #
+  # end
 
   describe 'Persistence' do
 
@@ -225,6 +225,15 @@ describe Question do
         expect(result.author).to include 'Leandro'
       end
 
+    end
+
+  end
+
+  describe 'Hooks' do
+
+    it 'can check if author is not set before save' do
+      q = Question.new
+      expect { q.save }.to raise_error(MongoMapperError, 'Author should be String')
     end
 
   end
