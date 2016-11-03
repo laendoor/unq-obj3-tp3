@@ -31,7 +31,7 @@ module MongoRecord
 
     def field(name, type, constraints = {})
       @fields = [] if @fields.nil?
-      @fields << Field.new(name, type, constraints[:required])
+      @fields << Field.new(name, type, constraints)
 
       define_method(name) do
         instance_variable_get name.symbol_get
@@ -189,7 +189,7 @@ module MongoRecord
     end
 
     def save
-      required_checking
+      constraints_checking
       before_save
 
       self._id = BSON::ObjectId.new.to_s if self._id.nil?
@@ -207,12 +207,36 @@ module MongoRecord
       collection.delete_one({:_id => self._id})
     end
 
-    def required_checking
-      self.class.get_fields.select {|f| f.required }.each do |field|
+    def constraints_checking
+      required_checking
+      min_checking
+      max_checking
+    end
+
+    def abstract_constraint_checking(key, error_class, &constraint)
+      self.class.get_fields.select {|f| f.constraints.has_key?(key) }.each do |field|
         get_field = instance_variable_get(field.name.symbol_get)
-        if get_field.nil? || get_field.empty?
-          raise MongoRequiredFieldError.new field.name.to_s
+        if get_field.nil? || constraint.call(get_field, field)
+          raise error_class.new field.name.to_s
         end
+      end
+    end
+
+    def min_checking
+      abstract_constraint_checking(:min, MongoMinFieldError) do |get_field, field|
+        get_field < field.constraints[:min]
+      end
+    end
+
+    def max_checking
+      abstract_constraint_checking(:max, MongoMaxFieldError) do |get_field, field|
+        get_field > field.constraints[:max]
+      end
+    end
+
+    def required_checking
+      abstract_constraint_checking(:required, MongoRequiredFieldError) do |get_field, field|
+        field.constraints[:required] && (get_field.nil? || get_field.empty?)
       end
     end
 
@@ -238,12 +262,12 @@ module MongoRecord
   end
 
   class Field
-    attr_accessor :name, :type, :required
+    attr_accessor :name, :type, :constraints
 
-    def initialize(name, type, required)
+    def initialize(name, type, constraints)
       self.name = name
       self.type = type
-      self.required = required
+      self.constraints = constraints
     end
   end
 

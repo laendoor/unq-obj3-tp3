@@ -10,7 +10,21 @@ class MongoRequiredFieldError < MongoMapperError
     msg = "The field <#{field_name}> is required."
     super msg
   end
+end
+
+class MongoMinFieldError < MongoMapperError
+  def initialize(field_name)
+    msg = "The field <#{field_name}> should be greater."
+    super msg
   end
+end
+
+class MongoMaxFieldError < MongoMapperError
+  def initialize(field_name)
+    msg = "The field <#{field_name}> should be lesser."
+    super msg
+  end
+end
 
 class MongoTypeCheckingError < MongoMapperError
   def initialize(field_name, type_expect, type_given)

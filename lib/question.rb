@@ -7,6 +7,7 @@ class Question
   field :topic, String
   field :author, Person, :required => true
   field :content, String, :required => true
+  field :bla, Integer, {:min => 1, :max => 10}
 
   def initialize
     @populate_called = false

@@ -7,6 +7,7 @@ class QuestionFactory
     q.topic   = topic
     q.author  = Person.new(author)
     q.content = content
+    q.bla = 2
     q
   end
 

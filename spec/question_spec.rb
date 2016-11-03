@@ -226,6 +226,7 @@ describe Question do
         q.author  = 20
         q.topic   = 'Meta'
         q.content = 'Saraza'
+        q.bla = 2
 
         expect { q.save }.to raise_error(MongoTypeCheckingError, 'The field <author> requires a <Person> type, but got a <Fixnum> instead.')
       end
@@ -235,6 +236,7 @@ describe Question do
         q.topic  = 'Meta'
         q.content = true
         q.author = 'Facundo'
+        q.bla = 2
 
         expect { q.save }.to raise_error(MongoTypeCheckingError)
       end
@@ -244,6 +246,7 @@ describe Question do
         q.author = 'Facundo'
         q.content = 'Saraza'
         q.topic = []
+        q.bla = 2
 
         expect { q.save }.to raise_error(MongoTypeCheckingError)
       end
@@ -296,8 +299,29 @@ describe Question do
       q.author = Person.new 'asd'
       q.content = 'asd'
       q.topic = ''
+      q.bla = 2
 
       expect { q.save }.not_to raise_error
+    end
+
+    it 'Bla should be 1 at least' do
+      q = Question.new
+      q.author = Person.new 'asd'
+      q.content = 'asd'
+      q.topic = ''
+      q.bla = 0
+
+      expect { q.save }.to raise_error(MongoMinFieldError)
+    end
+
+    it 'Bla should be 10 at most' do
+      q = Question.new
+      q.author = Person.new 'asd'
+      q.content = 'asd'
+      q.topic = ''
+      q.bla = 11
+
+      expect { q.save }.to raise_error(MongoMaxFieldError)
     end
 
   end
