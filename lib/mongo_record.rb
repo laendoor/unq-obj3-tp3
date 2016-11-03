@@ -92,11 +92,15 @@ module MongoRecord
     end
 
     def composed_find?(method)
-      false
+      is_find?(method) && extract_find(method).include?('_and_')
     end
 
     def composed_find(method, *args)
-      # TODO
+      hash   = {}
+      values = args.first
+      fields = method.split '_and_'
+      fields.each { |field| hash[field.to_sym] = values.shift }
+      find(hash)
     end
 
     def map_results(results)

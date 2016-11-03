@@ -198,10 +198,17 @@ describe Question do
 
       it 'can find by content' do
         results = Question.find_by_content('Bla4')
-        result_authors = results.map { |x| x.author }
 
         expect(results.count).to eq 2
-        expect(result_authors).to include('Emanuel', 'Facundo')
+        expect(results.map { |x| x.author }).to include('Emanuel', 'Facundo')
+        end
+
+      it 'can find by author and content' do
+        results = Question.find_by_author_and_content('Javier', 'Bla2')
+
+        expect(results.count).to eq 1
+        expect(results.map { |x| x.author }).to include 'Javier'
+        expect(results.map { |x| x.content }).to include 'Bla2'
       end
 
     end
