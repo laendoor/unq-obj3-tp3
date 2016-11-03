@@ -146,13 +146,12 @@ describe Question do
 
     before :all do
       Question.collection.drop
-
       QuestionFactory.insert(author = 'Javier',  content = 'Bla1')
       QuestionFactory.insert(author = 'Javier',  content = 'Bla2')
       QuestionFactory.insert(author = 'Ariel',   content = 'Bla3')
       QuestionFactory.insert(author = 'Emanuel', content = 'Bla4')
-      QuestionFactory.insert(author = 'Facundo', content = 'Bla5')
-      QuestionFactory.insert(author = 'Leandro', content = 'Bla6')
+      QuestionFactory.insert(author = 'Facundo', content = 'Bla4')
+      QuestionFactory.insert(author = 'Leandro', content = 'Bla5')
     end
 
     describe 'Basic Find' do
@@ -195,6 +194,14 @@ describe Question do
 
         expect(results.count).to eq 1
         expect(results.first.author).to eq 'Ariel'
+      end
+
+      it 'can find by content' do
+        results = Question.find_by_content('Bla4')
+        result_authors = results.map { |x| x.author }
+
+        expect(results.count).to eq 2
+        expect(result_authors).to include('Emanuel', 'Facundo')
       end
 
     end
