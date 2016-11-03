@@ -31,7 +31,7 @@ module MongoRecord
 
     def field(name, type, constraints = {})
       @fields = [] if @fields.nil?
-      @fields << Field.new(name, type, constraints[:required])
+      @fields << Field.new(name, type, constraints)
 
       define_method(name) do
         instance_variable_get name.symbol_get
@@ -97,11 +97,22 @@ module MongoRecord
       extract_find('find_one_by_', method)
     end
 
+    def is_mongo
+      true
+    end
+
     def find_by(method, *args)
       hash   = {}
       values = args.first
       fields = method.split '_and_'
-      fields.each { |field| hash[field.to_sym] = values.shift }
+      fields.each do |field|
+        field_type = get_field_by_name(field).type
+        value = values.shift
+        if field_type.respond_to? :is_mongo
+          value = field_type.new(value).send(:as_hash_alone)
+        end
+        hash[field.to_sym] = value
+      end
       find(hash)
     end
 
@@ -114,12 +125,27 @@ module MongoRecord
     end
 
     def map_item(item)
-      i = self.new
-      item.each do |key, value|
-        i.instance_variable_set(key.to_sym.symbol_get, value)
-      end
+      i = map_item_alone(item)
       i.instance_eval(&@on_populate)
       i
+    end
+
+    def map_item_alone(item)
+      i = self.new
+      item.each do |key, value|
+        field = get_field_by_name(key)
+        if !field.nil? && field.type.respond_to?(:is_mongo)
+          new_value = field.type.send(:map_item_alone, value)
+        else
+          new_value = value
+        end
+        i.instance_variable_set(key.to_sym.symbol_get, new_value)
+      end
+      i
+    end
+
+    def get_field_by_name(key)
+      @fields.select { |x| x.name.equal? key.to_sym }.first
     end
 
     def on_populate(&block)
@@ -137,9 +163,20 @@ module MongoRecord
     end
 
     def as_hash
-      hash = {}
-      self.class.get_fields.each { |f| hash[f.name] = instance_variable_get f.name.symbol_get }
+      hash = as_hash_alone
       hash[:_id] = _id
+      hash
+    end
+
+    def as_hash_alone
+      hash = {}
+      self.class.get_fields.each do |f|
+        get_var = instance_variable_get f.name.symbol_get
+        if get_var.class.respond_to? :is_mongo
+          get_var = get_var.send(:as_hash_alone)
+        end
+        hash[f.name] = get_var
+      end
       hash
     end
 
@@ -152,7 +189,7 @@ module MongoRecord
     end
 
     def save
-      required_checking
+      constraints_checking
       before_save
 
       self._id = BSON::ObjectId.new.to_s if self._id.nil?
@@ -170,12 +207,36 @@ module MongoRecord
       collection.delete_one({:_id => self._id})
     end
 
-    def required_checking
-      self.class.get_fields.select {|f| f.required }.each do |field|
+    def constraints_checking
+      required_checking
+      min_checking
+      max_checking
+    end
+
+    def abstract_constraint_checking(key, error_class, &constraint)
+      self.class.get_fields.select {|f| f.constraints.has_key?(key) }.each do |field|
         get_field = instance_variable_get(field.name.symbol_get)
-        if get_field.nil? || get_field.empty?
-          raise MongoRequiredFieldError.new field.name.to_s
+        if get_field.nil? || constraint.call(get_field, field)
+          raise error_class.new field.name.to_s
         end
+      end
+    end
+
+    def min_checking
+      abstract_constraint_checking(:min, MongoMinFieldError) do |get_field, field|
+        get_field < field.constraints[:min]
+      end
+    end
+
+    def max_checking
+      abstract_constraint_checking(:max, MongoMaxFieldError) do |get_field, field|
+        get_field > field.constraints[:max]
+      end
+    end
+
+    def required_checking
+      abstract_constraint_checking(:required, MongoRequiredFieldError) do |get_field, field|
+        field.constraints[:required] && (get_field.nil? || get_field.empty?)
       end
     end
 
@@ -201,12 +262,12 @@ module MongoRecord
   end
 
   class Field
-    attr_accessor :name, :type, :required
+    attr_accessor :name, :type, :constraints
 
-    def initialize(name, type, required)
+    def initialize(name, type, constraints)
       self.name = name
       self.type = type
-      self.required = required
+      self.constraints = constraints
     end
   end
 

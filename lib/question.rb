@@ -1,11 +1,13 @@
+require 'person'
 require 'mongo_record'
 
 class Question
   include MongoRecord
 
   field :topic, String
-  field :author, String, :required => true
+  field :author, Person, :required => true
   field :content, String, :required => true
+  field :bla, Integer, {:min => 1, :max => 10}
 
   def initialize
     @populate_called = false

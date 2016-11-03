@@ -5,8 +5,9 @@ class QuestionFactory
   def self.create(author = '', content = '', topic = '')
     q = Question.new
     q.topic   = topic
-    q.author  = author
+    q.author  = Person.new(author)
     q.content = content
+    q.bla = 2
     q
   end
 
