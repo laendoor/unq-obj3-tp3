@@ -24,7 +24,7 @@ describe Question do
       end
 
       it 'reflects fields' do
-        expect(Question.fields).to eq ([:author, :content])
+        expect(Question.fields).to include(:author, :content, :topic)
       end
 
       it 'reflects collection name' do
@@ -34,11 +34,7 @@ describe Question do
       it 'can return a hash of fields' do
         q = QuestionFactory.create(author = 'Eduardo', content = 'ABC?')
 
-        expect(q.as_hash).to eq ({
-          :_id => nil,
-          :author => 'Eduardo',
-          :content => 'ABC?'
-        })
+        expect(q.as_hash).to include(:author => 'Eduardo', :content => 'ABC?')
       end
 
     end
@@ -146,12 +142,12 @@ describe Question do
 
     before :all do
       Question.collection.drop
-      QuestionFactory.insert(author = 'Javier',  content = 'Bla1')
-      QuestionFactory.insert(author = 'Javier',  content = 'Bla2')
-      QuestionFactory.insert(author = 'Ariel',   content = 'Bla3')
-      QuestionFactory.insert(author = 'Emanuel', content = 'Bla4')
-      QuestionFactory.insert(author = 'Facundo', content = 'Bla4')
-      QuestionFactory.insert(author = 'Leandro', content = 'Bla5')
+      QuestionFactory.insert(author = 'Javier',  content = 'Bla1', topic = 'Meta')
+      QuestionFactory.insert(author = 'Javier',  content = 'Bla2', topic = 'Cook')
+      QuestionFactory.insert(author = 'Ariel',   content = 'Bla3', topic = 'Social')
+      QuestionFactory.insert(author = 'Emanuel', content = 'Bla4', topic = 'Meta')
+      QuestionFactory.insert(author = 'Facundo', content = 'Bla4', topic = 'Social')
+      QuestionFactory.insert(author = 'Leandro', content = 'Bla5', topic = 'Meta')
     end
 
     describe 'Basic Find' do
@@ -209,6 +205,15 @@ describe Question do
         expect(results.count).to eq 1
         expect(results.map { |x| x.author }).to include 'Javier'
         expect(results.map { |x| x.content }).to include 'Bla2'
+      end
+
+      it 'can find by author and content and topic' do
+        results = Question.find_by_topic_and_author_and_content('Meta', 'Javier', 'Bla1')
+
+        expect(results.count).to eq 1
+        expect(results.map { |x| x.topic }).to include 'Meta'
+        expect(results.map { |x| x.author }).to include 'Javier'
+        expect(results.map { |x| x.content }).to include 'Bla1'
       end
 
     end
